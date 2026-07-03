@@ -1,3 +1,7 @@
-
 uvicorn
 fastapi
+exa-py
+python-dotenv
+tavily-python
+langchain
+langchain-mistralai
