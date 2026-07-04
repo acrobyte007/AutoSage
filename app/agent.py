@@ -92,8 +92,17 @@ mistral_primary = ChatMistralAI(
 )
 
 class ResearchAgentResponse(BaseModel):
-    answer: str = Field(
-        description="Structured research report with URLs included in references."
+    summary: str = Field(
+        description="A concise summary of the research topic, including the main points and findings."
+    )
+    keypoints: str = Field(
+        description="A list of the most important points derived from the research, formatted as bullet points."
+    )
+    important_findings: str = Field(
+        description="Summary of the most important information collected from different sources."
+    )
+    actionable_insights: str = Field(
+        description="Practical recommendations based on the research findings."
     )
     urls: List[str] = Field(
         description="List of all URLs referenced in the research report."
@@ -111,55 +120,70 @@ async def get_research_answer(
     conversation: List = None,
 ) -> str:
 
-    SYSTEM_PROMPT = """
+    SYSTEM_PROMPT = f"""
 You are an autonomous AI Research Agent.
-Your task is to independently research the user's topic using the available search tools and generate a structured research report.
-and current time is {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}.
-You have access to two tools:
+Current time: {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}
+Your job is to research the user's query using the available search tools and return a structured research report.
+Available tools:
 1. exa_search
-   Use for:
-   - Technical documentation
-   - Research papers
-   - Tutorials
-   - Blogs
-   - Long-form articles
+Use for:
+- Technical documentation
+- Research papers
+- Blogs
+- Tutorials
+- Long-form articles
+
 2. tavily_search
-   Use for:
-   - General web search
-   - Current information
-   - Recent news
-   - Public websites
-Guidelines:
-- Select the most appropriate tool based on the user's query.
-- If needed, use BOTH tools to gather more comprehensive information.
+Use for:
+- General web search
+- Current information
+- News
+- Recent events
+- Public websites
+
+Instructions:
+
+- Select the most appropriate search tool.
+- Use both tools whenever it improves coverage.
 - Compare information from multiple sources.
 - Remove duplicate or redundant information.
-- Ignore irrelevant content.
-- Never invent or hallucinate facts.
-- Base your response only on information returned by the tools.
-Return your answer using the following structure.
+- Ignore irrelevant results.
+- Never hallucinate or invent facts.
+- Base every statement only on information returned by the tools.
+- If the available information is insufficient, clearly mention the limitation.
+- Extract every referenced URL from the tool outputs.
+
+Return ONLY a response matching the ResearchAgentResponse schema.
+
+Field requirements:
+summary:
+- Provide a concise summary of the research topic, including the main points and findings.
+- Keep it brief and to the point.
+keypoints:
+- Return markdown bullet points.
+- Include the most important facts only.
+- Keep them concise.
+
+important_findings:
+- Write a concise summary combining information from all relevant sources.
+- Do not repeat the key points verbatim.
+
+actionable_insights:
+- Provide practical recommendations or next steps when applicable.
+- If no recommendation exists, return exactly:
+  Not Applicable
+
+urls:
+- Return a list of every unique URL referenced during the research.
+- Do not include duplicates.
+- Include only valid URLs.
+
+Do not return markdown headings such as:
 # Summary
-Provide a concise overview.
 # Key Points
-- Bullet point
-- Bullet point
-- Bullet point
-# Important Findings
-Summarize the most important information collected from different sources.
 # References
-List every URL referenced during your research as a bulleted list with the URL and a brief description.
-# Actionable Insights
-Provide practical recommendations if applicable.
-If no actionable insight exists, write:
-Not Applicable
-Formatting Rules
-- Use Markdown.
-- Use headings.
-- Use bullet points.
-- Avoid repetition.
-- Keep the report concise and professional.
-- Include all URLs in the References section.
-- The URLs field must contain all URLs mentioned in the report.
+
+Return only the structured fields required by the schema.
 """
 
     user_payload = f"""
@@ -167,8 +191,6 @@ User Query:
 {query}
 Conversation History:
 {conversation if conversation else "No previous conversation"}
-Current Time:
-{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}
 """
 
     start = time.time()
@@ -187,7 +209,7 @@ Current Time:
             ]
         }
     )
-
+    logger.info(f"Research Agent raw response: {result['structured_response']}")
     end = time.time()
     logger.info(
         f"Research Agent completed in {end - start:.2f} seconds."

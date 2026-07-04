@@ -38,26 +38,56 @@ class ResearchResponse(BaseModel):
     processing_time: float
 
 
-def generate_pdf(markdown: str) -> bytes:
-    """
-    Generate a PDF from a markdown string.
-    Returns the PDF as bytes.
-    """
-    buffer = BytesIO()
+def build_markdown_report(report: ResearchAgentResponse) -> str:
+    """Convert the structured response into markdown."""
 
+    markdown = f"""
+# Summary
+
+{report.summary}
+
+# Key Points
+
+{report.keypoints}
+
+# Important Findings
+
+{report.important_findings}
+
+# Actionable Insights
+
+{report.actionable_insights}
+
+# References
+
+"""
+
+    for url in report.urls:
+        markdown += f"- {url}\n"
+
+    return markdown.strip()
+
+
+def generate_pdf(report: ResearchAgentResponse) -> bytes:
+    """
+    Generate a PDF from ResearchAgentResponse.
+    """
+
+    markdown = build_markdown_report(report)
+
+    buffer = BytesIO()
     doc = SimpleDocTemplate(buffer)
     styles = getSampleStyleSheet()
 
     story = []
 
-    for line in markdown.split("\n"):
+    for line in markdown.splitlines():
 
         line = line.strip()
 
         if not line:
             continue
 
-        # Headings
         if line.startswith("# "):
             story.append(
                 Paragraph(f"<b>{line[2:]}</b>", styles["Heading1"])
@@ -68,13 +98,11 @@ def generate_pdf(markdown: str) -> bytes:
                 Paragraph(f"<b>{line[3:]}</b>", styles["Heading2"])
             )
 
-        # Bullet points
         elif line.startswith("- "):
             story.append(
                 Paragraph(f"• {line[2:]}", styles["BodyText"])
             )
 
-        # Normal text
         else:
             story.append(
                 Paragraph(line, styles["BodyText"])
@@ -82,10 +110,10 @@ def generate_pdf(markdown: str) -> bytes:
 
     doc.build(story)
 
-    pdf_bytes = buffer.getvalue()
+    pdf = buffer.getvalue()
     buffer.close()
 
-    return pdf_bytes
+    return pdf
 
 
 @router.post("/", response_model=ResearchResponse)
@@ -107,7 +135,7 @@ async def research_endpoint(request: ResearchRequest):
             query=request.query,
             conversation=request.conversation,
         )
-        pdf_bytes = generate_pdf(result.answer)
+        pdf_bytes = generate_pdf(result)
         pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
         return ResearchResponse(
             success=True,
