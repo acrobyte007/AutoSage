@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 from app.tools.teveli import search_and_extract_tavily
 from app.tools.exa import search_and_extract
 
-
 load_dotenv()
+
 @tool
 def exa_search(query: str) -> str:
     """
@@ -53,6 +53,7 @@ Highlights:
     except Exception as e:
         logger.exception(e)
         return f"Exa Search Error: {str(e)}"
+
 @tool
 def tavily_search(query: str) -> str:
     """
@@ -89,12 +90,16 @@ mistral_primary = ChatMistralAI(
     temperature=0,
     max_retries=1,
 )
+
 class ResearchAgentResponse(BaseModel):
     answer: str = Field(
-        description="Structured research report."
+        description="Structured research report with URLs included in references."
+    )
+    urls: List[str] = Field(
+        description="List of all URLs referenced in the research report."
     )
 
-tools = [exa_search,tavily_search,]
+tools = [exa_search, tavily_search]
 agent = create_agent(
     mistral_primary,
     tools,
@@ -108,11 +113,8 @@ async def get_research_answer(
 
     SYSTEM_PROMPT = """
 You are an autonomous AI Research Agent.
-
 Your task is to independently research the user's topic using the available search tools and generate a structured research report.
-
 You have access to two tools:
-
 1. exa_search
    Use for:
    - Technical documentation
@@ -120,16 +122,13 @@ You have access to two tools:
    - Tutorials
    - Blogs
    - Long-form articles
-
 2. tavily_search
    Use for:
    - General web search
    - Current information
    - Recent news
    - Public websites
-
 Guidelines:
-
 - Select the most appropriate tool based on the user's query.
 - If needed, use BOTH tools to gather more comprehensive information.
 - Compare information from multiple sources.
@@ -137,48 +136,34 @@ Guidelines:
 - Ignore irrelevant content.
 - Never invent or hallucinate facts.
 - Base your response only on information returned by the tools.
-
 Return your answer using the following structure.
-
 # Summary
-
 Provide a concise overview.
-
 # Key Points
-
 - Bullet point
 - Bullet point
 - Bullet point
-
 # Important Findings
-
 Summarize the most important information collected from different sources.
-
 # References
-
-List every URL referenced during your research.
-
+List every URL referenced during your research as a bulleted list with the URL and a brief description.
 # Actionable Insights
-
 Provide practical recommendations if applicable.
-
 If no actionable insight exists, write:
-
 Not Applicable
-
 Formatting Rules
-
 - Use Markdown.
 - Use headings.
 - Use bullet points.
 - Avoid repetition.
 - Keep the report concise and professional.
+- Include all URLs in the References section.
+- The URLs field must contain all URLs mentioned in the report.
 """
 
     user_payload = f"""
 User Query:
 {query}
-
 Conversation History:
 {conversation if conversation else "No previous conversation"}
 """
