@@ -114,6 +114,7 @@ async def get_research_answer(
     SYSTEM_PROMPT = """
 You are an autonomous AI Research Agent.
 Your task is to independently research the user's topic using the available search tools and generate a structured research report.
+and current time is {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}.
 You have access to two tools:
 1. exa_search
    Use for:
@@ -166,6 +167,8 @@ User Query:
 {query}
 Conversation History:
 {conversation if conversation else "No previous conversation"}
+Current Time:
+{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}
 """
 
     start = time.time()
