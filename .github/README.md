@@ -6,6 +6,13 @@ The agent is designed to answer research queries by utilizing external tools suc
 
 ---
 
+## Deployed URLs
+
+- Frontend: <<https://ajoy0071998-autosage-forntend.hf.space>>
+- Backend: <<https://ajoy0071998-autosage.hf.space>>
+
+---
+
 ## Features
 
 - REST API built with FastAPI
