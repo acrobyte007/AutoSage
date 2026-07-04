@@ -227,5 +227,3 @@ Logs include:
 - Research caching
 - Authentication
 - Rate limiting
-- Async background research
-- PDF report generation
