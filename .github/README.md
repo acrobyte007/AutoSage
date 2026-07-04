@@ -85,10 +85,15 @@ pip install -r requirements.txt
 
 ---
 
+```bash
+set environment variable
+TAVELI_API_KEY=your_api_key
+EXA_API_KEY=your_api_key
+MISTRAL_API_KEY=your_api_key
 ## Running the API
 
 ```bash
-uvicorn main:app --reload
+uvicorn main:app --reload -- port 8000
 ```
 
 The server starts on
@@ -120,9 +125,9 @@ Performs research on the given query.
 
 ```json
 {
-  "query": "Latest advancements in quantum computing",
+  "query": "Latest research in AI",
   "conversation": [
-    "Focus on practical applications."
+    " "
   ]
 }
 ```
@@ -137,13 +142,21 @@ Performs research on the given query.
 {
   "success": true,
   "data": {
-    "report": "...",
-    "sources": [
-      "https://..."
-    ]
+    "report": {
+      "summary": "Artificial Intelligence (AI) continues to advance rapidly in 2025–2026, with significant progress in multimodal foundation models, autonomous AI agents, robotics, scientific discovery, and enterprise adoption. Research is increasingly focused on improving reasoning, efficiency, and safety while enabling real-world deployment across industries.",
+      "keypoints": "- Advances in multimodal large language models.\n- AI agents capable of planning and tool use.\n- Significant improvements in robotics and embodied AI.\n- Increased focus on AI safety and governance.\n- Wider enterprise adoption of generative AI.",
+      "important_findings": "Recent research highlights major improvements in reasoning capabilities, long-context understanding, and autonomous task execution. Organizations are integrating AI into healthcare, software engineering, finance, and scientific research. Efficiency techniques such as quantization, distillation, and Mixture-of-Experts continue to reduce deployment costs.",
+      "actionable_insights": "Organizations should evaluate AI agent workflows, invest in retrieval-augmented generation for enterprise knowledge, monitor developments in open-source foundation models, and establish AI governance practices before large-scale deployment.",
+      "urls": [
+        "https://example.com/article1",
+        "https://example.com/research-paper",
+        "https://example.com/blog"
+      ]
+    },
+    "pdf": "JVBERi0xLjQKJcTl8uXr....base64...."
   },
   "error": null,
-  "processing_time": 2.41
+  "processing_time": 8.41
 }
 ```
 
